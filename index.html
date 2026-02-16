@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ödeme Takip Sistemi</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Ödemelerinizi kolayca takip edin ve yönetin">
+    <meta name="theme-color" content="#4F46E5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ödeme Takip">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- External CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    
+    <!-- GİRİŞ/KAYIT EKRANI -->
+    <div id="authScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="wallet" class="text-white" style="width:40px; height:40px"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Ödeme Takip</h1>
+                <p class="text-gray-600">Ödemelerinizi kolayca yönetin</p>
+            </div>
+            
+            <div class="flex gap-2 mb-6">
+                <button onclick="authApp.showLogin()" id="loginTab" class="flex-1 py-3 rounded-lg font-semibold bg-indigo-600 text-white">Giriş Yap</button>
+                <button onclick="authApp.showRegister()" id="registerTab" class="flex-1 py-3 rounded-lg font-semibold bg-gray-200 text-gray-700">Kayıt Ol</button>
+            </div>
+            
+            <!-- Giriş Formu -->
+            <div id="loginForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">Email</label>
+                        <input type="email" id="loginEmail" placeholder="ornek@email.com" class="w-full border-2 rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">Şifre</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" class="w-full border-2 rounded-lg px-4 py-3">
+                    </div>
+                    <button onclick="authApp.login()" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition">
+                        Giriş Yap
+                    </button>
+                    
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">veya</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="authApp.googleLogin()" class="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-3">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19.8055 10.2292C19.8055 9.55156 19.7501 8.86719 19.6316 8.19531H10.2002V12.0492H15.6014C15.3734 13.2911 14.6576 14.3898 13.6174 15.0875V17.5866H16.8295C18.7165 15.8449 19.8055 13.2728 19.8055 10.2292Z" fill="#4285F4"/>
+                            <path d="M10.2002 20C12.9507 20 15.2559 19.1044 16.8328 17.5866L13.6207 15.0875C12.7384 15.6972 11.6028 16.0428 10.2035 16.0428C7.54343 16.0428 5.30085 14.2828 4.52184 11.9169H1.2168V14.4922C2.82679 17.6922 6.36168 20 10.2002 20Z" fill="#34A853"/>
+                            <path d="M4.51852 11.9169C4.0772 10.6753 4.0772 9.32813 4.51852 8.08646V5.51116H1.21681C-0.175606 8.28021 -0.175606 11.7232 1.21681 14.4922L4.51852 11.9169Z" fill="#FBBC04"/>
+                            <path d="M10.2002 3.95719C11.6795 3.93553 13.1041 4.47553 14.186 5.46803L17.0269 2.62719C15.1688 0.889693 12.7249 -0.0641574 10.2002 -0.0391574C6.36168 -0.0391574 2.82679 2.26719 1.2168 5.51115L4.51851 8.08645C5.29418 5.71719 7.5401 3.95719 10.2002 3.95719Z" fill="#EA4335"/>
+                        </svg>
+                        Google ile Giriş Yap
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Kayıt Formu -->
+            <div id="registerForm" style="display: none;">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">Email</label>
+                        <input type="email" id="registerEmail" placeholder="ornek@email.com" class="w-full border-2 rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">Şifre (min. 6 karakter)</label>
+                        <input type="password" id="registerPassword" placeholder="••••••••" class="w-full border-2 rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">Şifre Tekrar</label>
+                        <input type="password" id="registerPasswordConfirm" placeholder="••••••••" class="w-full border-2 rounded-lg px-4 py-3">
+                    </div>
+                    <button onclick="authApp.register()" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition">
+                        Kayıt Ol
+                    </button>
+                    
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">veya</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="authApp.googleLogin()" class="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-3">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19.8055 10.2292C19.8055 9.55156 19.7501 8.86719 19.6316 8.19531H10.2002V12.0492H15.6014C15.3734 13.2911 14.6576 14.3898 13.6174 15.0875V17.5866H16.8295C18.7165 15.8449 19.8055 13.2728 19.8055 10.2292Z" fill="#4285F4"/>
+                            <path d="M10.2002 20C12.9507 20 15.2559 19.1044 16.8328 17.5866L13.6207 15.0875C12.7384 15.6972 11.6028 16.0428 10.2035 16.0428C7.54343 16.0428 5.30085 14.2828 4.52184 11.9169H1.2168V14.4922C2.82679 17.6922 6.36168 20 10.2002 20Z" fill="#34A853"/>
+                            <path d="M4.51852 11.9169C4.0772 10.6753 4.0772 9.32813 4.51852 8.08646V5.51116H1.21681C-0.175606 8.28021 -0.175606 11.7232 1.21681 14.4922L4.51852 11.9169Z" fill="#FBBC04"/>
+                            <path d="M10.2002 3.95719C11.6795 3.93553 13.1041 4.47553 14.186 5.46803L17.0269 2.62719C15.1688 0.889693 12.7249 -0.0641574 10.2002 -0.0391574C6.36168 -0.0391574 2.82679 2.26719 1.2168 5.51115L4.51851 8.08645C5.29418 5.71719 7.5401 3.95719 10.2002 3.95719Z" fill="#EA4335"/>
+                        </svg>
+                        Google ile Kayıt Ol
+                    </button>
+                </div>
+            </div>
+            
+            <div id="authError" class="hidden mt-4 p-3 bg-red-50 border-2 border-red-300 rounded-lg">
+                <p class="text-red-700 text-sm font-medium"></p>
+            </div>
+            <div id="authSuccess" class="hidden mt-4 p-3 bg-green-50 border-2 border-green-300 rounded-lg">
+                <p class="text-green-700 text-sm font-medium"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ANA UYGULAMA -->
+    <div id="mainApp" style="display: none;" class="p-4">
+        <div id="app" class="max-w-6xl mx-auto content-wrapper"></div>
+        
+        <!-- Yeni Ödeme Modal -->
+        <div id="yeniOdemeModal" class="modal">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4"><i data-lucide="plus-circle"></i> Yeni Ödeme Ekle</h2>
+                <div class="space-y-4">
+                    <input type="text" id="modalAciklama" placeholder="Açıklama" class="w-full border-2 rounded-lg px-4 py-2">
+                    <input type="number" id="modalTutar" placeholder="Tutar" class="w-full border-2 rounded-lg px-4 py-2">
+                    <input type="date" id="modalVadeTarihi" class="w-full border-2 rounded-lg px-4 py-2">
+                    <select id="modalKategori" class="w-full border-2 rounded-lg px-4 py-2"></select>
+                    <div class="p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" id="modalTekrarlar" class="w-5 h-5">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="refresh-cw" style="width:18px"></i>
+                                    <span class="font-semibold">Tekrarlayan</span>
+                                </div>
+                                <p class="text-sm mt-1 text-gray-600">Tamamlandığında sonraki aya devret</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button onclick="app.odemeEkleModal()" class="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold">Ekle</button>
+                    <button onclick="app.closeYeniOdemeModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold">İptal</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Düzenle Modal -->
+        <div id="editModal" class="modal">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4"><i data-lucide="edit"></i> Ödeme Düzenle</h2>
+                <div class="space-y-4">
+                    <input type="text" id="editAciklama" placeholder="Açıklama" class="w-full border-2 rounded-lg px-4 py-2">
+                    <input type="number" id="editTutar" placeholder="Tutar" class="w-full border-2 rounded-lg px-4 py-2">
+                    <input type="date" id="editVadeTarihi" class="w-full border-2 rounded-lg px-4 py-2">
+                    <select id="editKategori" class="w-full border-2 rounded-lg px-4 py-2"></select>
+                    <label class="flex items-center gap-2"><input type="checkbox" id="editTekrarlar" class="w-5 h-5"> Tekrarlayan</label>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button onclick="app.saveEdit()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg">Kaydet</button>
+                    <button onclick="app.closeEditModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg">İptal</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobil Navigasyon -->
+        <div class="mobile-nav md:hidden">
+            <div class="grid grid-cols-4 gap-1 p-2">
+                <button onclick="app.setSekme('odemeler')" id="mobNav1" class="flex flex-col items-center gap-1 p-2 rounded-lg">
+                    <i data-lucide="calendar" style="width:24px"></i>
+                    <span class="text-xs">Ödemeler</span>
+                </button>
+                <button onclick="app.setSekme('bakiye')" id="mobNav2" class="flex flex-col items-center gap-1 p-2 rounded-lg">
+                    <i data-lucide="wallet" style="width:24px"></i>
+                    <span class="text-xs">Bakiye</span>
+                </button>
+                <button onclick="app.setSekme('kategoriler')" id="mobNav3" class="flex flex-col items-center gap-1 p-2 rounded-lg">
+                    <i data-lucide="tag" style="width:24px"></i>
+                    <span class="text-xs">Kategori</span>
+                </button>
+                <button onclick="app.setSekme('gecmis')" id="mobNav4" class="flex flex-col items-center gap-1 p-2 rounded-lg">
+                    <i data-lucide="filter" style="width:24px"></i>
+                    <span class="text-xs">Geçmiş</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+    <script>
+        // Lucide ikonlarını başlat
+        lucide.createIcons();
+    </script>
+</body>
+</html>
